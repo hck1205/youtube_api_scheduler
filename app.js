@@ -1,13 +1,22 @@
-let express  = require('express');
-let app = express();
+const express  = require('express');
+const CONFIG = require('./config');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
 
-let indexRoute = require('./routes/index')
-let personRoute = require('./routes/person')
+mongoose.connect(CONFIG.CONNECTION_STRING, {useNewUrlParser: true});
+mongoose.Promise = global.Promise;
 
-app.use([indexRoute, personRoute]);
+const student = require('./routes/student');
+const indexRoute = require('./routes/index')
+const personRoute = require('./routes/person')
 
-const PORT = process.env.PORT || 3000;
+const app = express();
 
-app.listen(PORT, ()=> {
-    console.log(`Runninng on port ${PORT}`);
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:false}));
+app.use([indexRoute, personRoute, ]);
+app.use('/student', student);
+
+app.listen(CONFIG.PORT, ()=> {
+    console.log(`Runninng on port ${CONFIG.PORT}`);
 });
