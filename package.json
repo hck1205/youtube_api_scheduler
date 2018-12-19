@@ -13,8 +13,9 @@
     "url": "git+https://github.com/hck1205/expatik-api.git"
   },
   "dependencies": {
-    "express": "*",
     "body-parser": "*",
+    "cors": "^2.8.5",
+    "express": "*",
     "mongoose": "*"
   },
   "devDependencies": {

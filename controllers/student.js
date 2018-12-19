@@ -13,7 +13,6 @@ exports.create = function(req, res) {
 
 exports.get = (req, res) => {
     Student.find((error, students) => {
-        console.log(students);
         res.send(students);
     })
 };
