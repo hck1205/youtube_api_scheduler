@@ -13,10 +13,11 @@
     "url": "git+https://github.com/hck1205/expatik-api.git"
   },
   "dependencies": {
+    "axios": "^0.18.0",
     "body-parser": "*",
-    "cors": "^2.8.5",
     "express": "*",
-    "mongoose": "*"
+    "mongoose": "*",
+    "querystring": "^0.2.0"
   },
   "devDependencies": {
     "@types/express": "^4.16.0",

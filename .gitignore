@@ -4,3 +4,6 @@
 #IDE
 .vscode
 .idea
+
+#youtube json files
+/json
