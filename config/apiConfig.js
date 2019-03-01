@@ -1,5 +1,5 @@
 module.exports = {
-    apiKey: "AIzaSyBov--cAoU89hoKay1FMzDP52UZqXDHuSY",
-    videoCategoriesListUrl: "https://www.googleapis.com/youtube/v3/videoCategories",
-    videoListByCategory: "https://www.googleapis.com/youtube/v3/videos"
+    apiKey: "AIzaSyDZM6PMy7-ENTkN6dkdfEP-ow3sqveqtCU",
+    largeVideoCategoryList: "https://www.googleapis.com/youtube/v3/videoCategories",
+    videoListInLargeCategory: "https://www.googleapis.com/youtube/v3/videos"
 };
