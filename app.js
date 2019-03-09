@@ -1,14 +1,11 @@
 const express  = require('express');
 const CONFIG = require('./config');
-const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 
-mongoose.connect(CONFIG.CONNECTION_STRING, {useNewUrlParser: true});
-mongoose.Promise = global.Promise;
-
-const indexRoute = require('./routes/index')
+const indexRoute = require('./routes/index');
+const videoRoute = require('./routes/video');
 const channelRoute = require('./routes/channel');
-const rankRoute = require('./routes/rank')
+const rankRoute = require('./routes/rank');
 
 const app = express();
 
@@ -20,7 +17,8 @@ app.use(function(req, res, next) {
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}));
-app.use([indexRoute, channelRoute, rankRoute, ]);
+app.use([indexRoute, videoRoute, channelRoute, rankRoute]);
+app.use('/video', videoRoute);
 app.use('/channel', channelRoute);
 app.use('/rank', rankRoute);
 
