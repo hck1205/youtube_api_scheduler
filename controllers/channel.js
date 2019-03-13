@@ -8,11 +8,11 @@ exports.getChannelListWithStatistics = (req, res) => {
 
   let categoryFilePath = "";
   let writtenFileDestination = "";
-
-  if(req.params.categoryType === "large") {
+  const categorySizeType = req.params.categoryType;
+  if(categorySizeType === "large") {
     categoryFilePath = './json/youtubeApi/channelListInLargeCategory';
     writtenFileDestination = './json/youtubeApi/channelListWithStatistics/largeCategory';
-  } else if(req.params.categoryType === "small") {
+  } else if(categorySizeType === "small") {
     categoryFilePath = './json/youtubeApi/channelListInSmallCategory';
     writtenFileDestination = './json/youtubeApi/channelListWithStatistics/smallCategory';
   } else {
@@ -28,40 +28,42 @@ exports.getChannelListWithStatistics = (req, res) => {
 
   let categoryFileList = fs.readdirSync(categoryFilePath);
 
-  categoryFileList.forEach( (fileName, fileIndex) => {
-
+  for (const fileName of categoryFileList) {
     const channelListFile = JSON.parse(fs.readFileSync(`${categoryFilePath}/${fileName}`, 'utf8'));
-
     let apiCallCount = 1;
     let idField = "";
 
-    channelListFile.items.forEach( (item, index) => {
-
+    for (const [index, item] of channelListFile.items.entries()) {
       /**
        * Gather channel name until it reaches 50 channels
        * */
-      if(index < apiCallCount * maxChannelLength) {
+      if(index < apiCallCount * maxChannelLength && index !== channelListFile.items.length - 1) {
         idField !== "" ?  idField = idField.concat(",", item.snippet.channelId) : idField = item.snippet.channelId;
-      }
+      } else {
+        let idFieldParam = idField;
 
+        if(index === channelListFile.items.length - 1) {
+          idFieldParam = idFieldParam.concat(",", item.snippet.channelId);
+        } else {
+          idField = item.snippet.channelId;
+        }
 
-      /**
-       * when it reaches 50 channels
-       * */
-      if(index === (apiCallCount * maxChannelLength) - 1 || index === channelListFile.items.length - 1 ) {
         apiCallCount++;
+
+        /**
+         * when it reaches 50 channels
+         * */
         let category = channelListFile.title.replace(/ /g, "");
 
         if(!channelListStore.hasOwnProperty(category)) {
           channelListStore[category] = {}
           channelListStore[category].category = category;
           channelListStore[category].id = channelListFile.categoryId;
-          channelListStore[category].type = "large";
+          channelListStore[category].type = categorySizeType;
           channelListStore[category].items = [];
         }
 
-        let sendAjax = async function(category, idField) {
-
+        let sendAjax = async (category, idField) => (
           await axios(axiosConfig(
             "GET",
             apiConfig.channelDetailInfoList,
@@ -69,38 +71,36 @@ exports.getChannelListWithStatistics = (req, res) => {
               part: "snippet, statistics",
               id: idField
             }
-          )).then(response => {
+          ))
+        );
 
-            if(channelListStore.hasOwnProperty(category)) {
-              channelListStore[category].items = channelListStore[category].items.concat(response.data.items)
-            } else {
-              channelListStore[category] = {}
-              channelListStore[category].category = category;
-              channelListStore[category].id = channelListFile.categoryId;
-              channelListStore[category].type = "large";
-              channelListStore[category].items = [];
-            }
+        sendAjax(category, idFieldParam).then((response) => {
+          channelListStore[category].items = channelListStore[category].items.concat(response.data.items)
 
-            /**
-             * when index matches last element index, execute writing json file
-             * */
-            if(index === channelListFile.items.length - 1 ) {
+          // if(category === "Entertainment" || category === "Film&Animation") {
+          //   console.log(category, " ", channelListStore[category].items.length, " ", channelListFile.items.length)
+          // }
+          /**
+           * channelListStore[category].items length and channelListFile.items.length
+           * Length of two lists sometimes, does not guarantee to be identical (ex, Film&Animation and Entertainment)
+           * To be ensure to write all list items "setTimeout" is used to write file
+           * : when index matches last element, execute writing json file
+           * */
+
+          if(index === channelListFile.items.length - 1) {
+            setTimeout(function() {
               let channelList = channelListStore[category];
               fs.writeFile(`${writtenFileDestination}/category_${category}.json`,
                 JSON.stringify(channelList, null, 2), 'utf8', (err) => {
                   if (err) throw err;
                   console.log(`completed category_${category}.json file!`);
                 });
-            }
+            }, 3000)
+          }
+        }); // end send ajax
 
-          });
-        };
-        sendAjax(category, idField);
-        idField = "";
-      };
+      }
+    }
 
-    }); // end channelListFileObjList.forEach()
-
-  }); // end categoryFileList.forEach()
-
+  }
 };

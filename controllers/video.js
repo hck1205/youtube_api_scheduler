@@ -3,6 +3,8 @@ const axiosConfig = require('../config/axiosConfig');
 const apiConfig = require('../config/apiConfig');
 const fs = require('fs');
 
+let apiCalls = 0;
+
 /**
  * Get Youtube Category ID List
  * */
@@ -155,30 +157,37 @@ const writeSmallCategoryChannelList = (category) => {
   };
 
   let getVideoList = () => {
-    axios(axiosConfig(
-      "GET",
-      apiConfig.channelListInSmallCategory,
-      apiParams)).then((response) => {
+    if(startCount < maxCount) {
+      console.log("getVideoList")
       startCount++;
-      channelList.items = channelList.items.concat(response.data.items);
-      if(channelList.items.length === 0) { // if video is not found
-        completeFlag = true;
-      } else if (startCount === maxCount) { // 'if condition' identifies last api call for the category
-        writeJsonFile(channelList);
-        completeFlag = true;
-      } else { // if response has page token then call api again until it reaches last api call
-        if(response.data.nextPageToken !== "") {
-          apiParams.pageToken = response.data.nextPageToken;
-          getVideoList(); // Recursive func
-        } else {
+      console.log(apiCalls);
+      console.log("apiCalls:", apiCalls);
+      axios(axiosConfig(
+        "GET",
+        apiConfig.channelListInSmallCategory,
+        apiParams)).then((response) => {
+        channelList.items = channelList.items.concat(response.data.items);
+        if(channelList.items.length === 0) { // if video is not found
+          completeFlag = true;
+        } else if (startCount === maxCount) { // 'if condition' identifies last api call for the category
           writeJsonFile(channelList);
           completeFlag = true;
+        } else { // if response has page token then call api again until it reaches last api call
+          if(response.data.nextPageToken !== "") {
+            apiParams.pageToken = response.data.nextPageToken;
+            getVideoList(); // Recursive func
+          } else {
+            writeJsonFile(channelList);
+            completeFlag = true;
+          }
         }
-      }
-    }).catch(error => {
-      console.log(error.response.data)
-    });
-  };
+      }).catch(error => {
+          console.log(error.response.data)
+          let errLog = { status: error.response.status, statusText: error.response.statusText };
+          console.log(errLog)
+        });
+      };
+    };
 
   if(!completeFlag) getVideoList(); // Recursive Start
 };
@@ -194,10 +203,10 @@ const writeJsonFile = (channelList) => {
     console.log(e);
   }
   finally {
-    fs.writeFile(`./json/youtubeApi/channelListInSmallCategory/category_${category.id}.json`, JSON.stringify(channelList, null, 2), 'utf8',
+    fs.writeFile(`./json/youtubeApi/channelListInSmallCategory/category_${channelList.categoryId}.json`, JSON.stringify(channelList, null, 2), 'utf8',
       (err) => {
         if (err) throw err;
-        console.log(`completed writing small category_${category.id}.json file!`);
+        console.log(`completed writing small category_${channelList.categoryId}.json file!`);
       });
   }
 };
