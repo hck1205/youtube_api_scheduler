@@ -9,6 +9,7 @@ exports.getChannelListWithStatistics = (req, res) => {
   let categoryFilePath = "";
   let writtenFileDestination = "";
   const categorySizeType = req.params.categoryType;
+
   if(categorySizeType === "large") {
     categoryFilePath = './json/youtubeApi/channelListInLargeCategory';
     writtenFileDestination = './json/youtubeApi/channelListWithStatistics/largeCategory';
@@ -18,7 +19,6 @@ exports.getChannelListWithStatistics = (req, res) => {
   } else {
     res.send("Not allow to enter");
   }
-
 
   /**
    * YouTube Allows only 50 channels to make an Api call.
@@ -34,20 +34,21 @@ exports.getChannelListWithStatistics = (req, res) => {
     let idField = "";
 
     for (const [index, item] of channelListFile.items.entries()) {
+
       /**
        * Gather channel name until it reaches 50 channels
        * */
-      if(index < apiCallCount * maxChannelLength && index !== channelListFile.items.length - 1) {
+      if(index < (apiCallCount * maxChannelLength) - 1 && index !== channelListFile.items.length - 1) {
         idField !== "" ?  idField = idField.concat(",", item.snippet.channelId) : idField = item.snippet.channelId;
       } else {
-        let idFieldParam = idField;
 
+        let idFieldParam = "";
         if(index === channelListFile.items.length - 1) {
-          idFieldParam = idFieldParam.concat(",", item.snippet.channelId);
+          idFieldParam = idField === "" ? item.snippet.channelId : idField.concat(",", item.snippet.channelId)
         } else {
-          idField = item.snippet.channelId;
+          idFieldParam = idField.concat(",", item.snippet.channelId)
         }
-
+        idField = "";
         apiCallCount++;
 
         /**
@@ -77,9 +78,6 @@ exports.getChannelListWithStatistics = (req, res) => {
         sendAjax(category, idFieldParam).then((response) => {
           channelListStore[category].items = channelListStore[category].items.concat(response.data.items)
 
-          // if(category === "Entertainment" || category === "Film&Animation") {
-          //   console.log(category, " ", channelListStore[category].items.length, " ", channelListFile.items.length)
-          // }
           /**
            * channelListStore[category].items length and channelListFile.items.length
            * Length of two lists sometimes, does not guarantee to be identical (ex, Film&Animation and Entertainment)
@@ -98,7 +96,6 @@ exports.getChannelListWithStatistics = (req, res) => {
             }, 3000)
           }
         }); // end send ajax
-
       }
     }
 

@@ -156,12 +156,10 @@ const writeSmallCategoryChannelList = (category) => {
     items: []
   };
 
-  let getVideoList = () => {
+  let getChannelList = () => {
     if(startCount < maxCount) {
       console.log("getVideoList")
       startCount++;
-      console.log(apiCalls);
-      console.log("apiCalls:", apiCalls);
       axios(axiosConfig(
         "GET",
         apiConfig.channelListInSmallCategory,
@@ -175,7 +173,7 @@ const writeSmallCategoryChannelList = (category) => {
         } else { // if response has page token then call api again until it reaches last api call
           if(response.data.nextPageToken !== "") {
             apiParams.pageToken = response.data.nextPageToken;
-            getVideoList(); // Recursive func
+            getChannelList(); // Recursive func
           } else {
             writeJsonFile(channelList);
             completeFlag = true;
@@ -189,7 +187,7 @@ const writeSmallCategoryChannelList = (category) => {
       };
     };
 
-  if(!completeFlag) getVideoList(); // Recursive Start
+  if(!completeFlag) getChannelList(); // Recursive Start
 };
 
 const writeJsonFile = (channelList) => {
