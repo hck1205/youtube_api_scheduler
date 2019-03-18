@@ -100,7 +100,7 @@ const writeLargeCategoryChannelList = (title, id) => {
   let getVideoList = () => {
     axios(axiosConfig(
       "GET",
-      apiConfig.channelListInLargeCategory,
+      apiConfig.mostPopularVideoList,
       apiParams)).then((response) => {
       videoList.items = videoList.items.concat(response.data.items);
       if(videoList.items.length === 0) { // if video is not found
@@ -207,4 +207,68 @@ const writeJsonFile = (channelList) => {
         console.log(`completed writing small category_${channelList.categoryId}.json file!`);
       });
   }
+};
+
+exports.getMostPopularVideo = () => {
+  let apiParams = {
+    part: "id, snippet, contentDetails, player, statistics, topicDetails",
+    chart: "mostPopular",
+    maxResults: 10,
+    regionCode: "KR"
+  };
+
+  try {
+    axios(axiosConfig(
+      "GET",
+      apiConfig.mostPopularVideoList,
+      apiParams)).then((response) => {
+      fs.writeFile('./json/youtubeApi/mostPopularVideoList/popularVideoList.json', JSON.stringify(response.data, null, 2), 'utf8',
+        (err) => {
+          if(err) throw err;
+          console.log("completed writing popularVideoList.json file!");
+        });
+    })
+  } catch (error) {
+    console.error("getMostPopularVideo:", error);
+  }
+
+};
+
+exports.getPopularVideoList = (req, res) => {
+  let apiParams = {};
+  let filePath = "";
+
+  if(req.params.type === "music") {
+    apiParams.part = "id, snippet, player, statistics";
+    apiParams.chart = "mostPopular";
+    apiParams.maxResults = 50;
+    apiParams.regionCode = "KR";
+    apiParams.videoCategoryId = 10;
+    filePath = "popularMusicVideoList";
+  }
+
+  if(req.params.type === "us") {
+    apiParams.part = "id, snippet, contentDetails, player, statistics, status, topicDetails";
+    apiParams.chart = "mostPopular";
+    apiParams.maxResults = 50;
+    apiParams.regionCode = "US";
+    filePath = "popularUSVideoList";
+  }
+
+
+  try {
+    axios(axiosConfig(
+      "GET",
+      apiConfig.mostPopularVideoList,
+      apiParams)).then((response) => {
+      fs.writeFile(`./json/youtubeApi/${filePath}/${filePath}.json`, JSON.stringify(response.data, null, 2), 'utf8',
+        (err) => {
+          if(err) throw err;
+          console.log(`completed writing ${filePath}.json file!`);
+        });
+    })
+  } catch (error) {
+    console.error("popularVideoList:", error);
+  }
+
 };
