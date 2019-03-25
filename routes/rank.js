@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router()
-const channelController = require('../controllers/channel');
+const rankController = require('../controllers/rank');
 
-// router.get('/list/:categoryType', channelController.getChannelListWithStatistics);
+router.get('/rank/all', rankController.rankAllChannels);
 
 module.exports = router;

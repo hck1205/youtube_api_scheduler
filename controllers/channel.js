@@ -101,3 +101,32 @@ exports.getChannelListWithStatistics = (req, res) => {
 
   }
 };
+
+exports.getRecommendedChannel = (req, res) => {
+
+  let filesPath = './json/youtubeApi/channelListWithStatistics/smallCategory';
+  let writtenFileDestination = './json/youtubeApi/recommendedChannelList';
+  let categoryFileList = fs.readdirSync(filesPath);
+
+  let storeData = {
+    category: 'Recommended',
+    id: 'multi',
+    type: 'small',
+    items: []
+  };
+
+  for (const fileName of categoryFileList) {
+    const channelList = JSON.parse(fs.readFileSync(`${filesPath}/${fileName}`, 'utf8'));
+    for(let i = 0; i < 5; i++) {
+      let randomIndex = Math.floor(Math.random() * channelList.items.length);
+      storeData.items = storeData.items.concat(channelList.items[randomIndex])
+    }
+  }
+
+  fs.writeFile(`${writtenFileDestination}/recommendedChannelList.json`,
+    JSON.stringify(storeData, null, 2), 'utf8', (err) => {
+      if (err) throw err;
+      console.log(`completed recommendedChannelList.json file!`);
+    });
+
+};
