@@ -158,7 +158,6 @@ const writeSmallCategoryChannelList = (category) => {
 
   let getChannelList = () => {
     if(startCount < maxCount) {
-      console.log("getVideoList")
       startCount++;
       axios(axiosConfig(
         "GET",
@@ -238,37 +237,78 @@ exports.getPopularVideoList = (req, res) => {
   let apiParams = {};
   let filePath = "";
 
-  if(req.params.type === "music") {
-    apiParams.part = "id, snippet, player, statistics";
-    apiParams.chart = "mostPopular";
+  /**
+   * For Music and US videos,
+   * "mostPopularVideoList" api is going to be called
+   * For Movie,
+   * "channelListInSmallCategory" api is going to be called
+   * */
+
+  if(req.params.type !== "movie") {
+
+    if(req.params.type === "music") {
+      apiParams.part = "id, snippet, player, statistics";
+      apiParams.chart = "mostPopular";
+      apiParams.maxResults = 50;
+      apiParams.regionCode = "KR";
+      apiParams.videoCategoryId = 10;
+      filePath = "popularMusicVideoList";
+    }
+
+    if(req.params.type === "us") {
+      apiParams.part = "id, snippet, contentDetails, player, statistics, status, topicDetails";
+      apiParams.chart = "mostPopular";
+      apiParams.maxResults = 50;
+      apiParams.regionCode = "US";
+      filePath = "popularUSVideoList";
+    }
+
+
+    try {
+      axios(axiosConfig(
+        "GET",
+        apiConfig.mostPopularVideoList,
+        apiParams)).then((response) => {
+        fs.writeFile(`./json/youtubeApi/${filePath}/${filePath}.json`, JSON.stringify(response.data, null, 2), 'utf8',
+          (err) => {
+            if(err) throw err;
+            console.log(`completed writing ${filePath}.json file!`);
+          });
+      })
+    } catch (error) {
+      console.error("popularVideoList:", error);
+    }
+
+  } else { // for movie
+    const thirtyDays = 2592000000; // 30 Days
+    const thirtyDaysFromNow = Date.now() - thirtyDays
+
+    apiParams.part = "id, snippet";
     apiParams.maxResults = 50;
+    apiParams.order = "date";
+    apiParams.q = "official movie trailer";
     apiParams.regionCode = "KR";
-    apiParams.videoCategoryId = 10;
-    filePath = "popularMusicVideoList";
+    apiParams.relevanceLanguage = "KO";
+    apiParams.topicId = "/m/02vxn";
+    filePath = "officialMVTrailerVideoList";
+
+    try {
+      axios(axiosConfig(
+        "GET",
+        apiConfig.channelListInSmallCategory,
+        apiParams)).then((response) => {
+          response.data.items = response.data.items.filter((item) => {
+            return Date.parse(item.snippet.publishedAt) >= thirtyDaysFromNow
+          })
+
+          fs.writeFile(`./json/youtubeApi/${filePath}/${filePath}.json`, JSON.stringify(response.data, null, 2), 'utf8',
+            (err) => {
+              if(err) throw err;
+              console.log(`completed writing ${filePath}.json file!`);
+            });
+      })
+    } catch (error) {
+      console.error("popularVideoList:", error);
+    }
   }
-
-  if(req.params.type === "us") {
-    apiParams.part = "id, snippet, contentDetails, player, statistics, status, topicDetails";
-    apiParams.chart = "mostPopular";
-    apiParams.maxResults = 50;
-    apiParams.regionCode = "US";
-    filePath = "popularUSVideoList";
-  }
-
-
-  try {
-    axios(axiosConfig(
-      "GET",
-      apiConfig.mostPopularVideoList,
-      apiParams)).then((response) => {
-      fs.writeFile(`./json/youtubeApi/${filePath}/${filePath}.json`, JSON.stringify(response.data, null, 2), 'utf8',
-        (err) => {
-          if(err) throw err;
-          console.log(`completed writing ${filePath}.json file!`);
-        });
-    })
-  } catch (error) {
-    console.error("popularVideoList:", error);
-  }
-
 };
