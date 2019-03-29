@@ -97,6 +97,10 @@ exports.rankByCategory = (req, res) => {
   let koreanRegEx = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
   // let englishRegEx = /[a-z|A-Z]/;
 
+  /**
+   * Only Music category is going to be treated different ways
+   * Music category is going to include kpop, entertainment, cover, music creator
+   * */
   let musicData = {
     category: "Music",
     id: [18,19,20,21],
@@ -116,10 +120,18 @@ exports.rankByCategory = (req, res) => {
      * several different categories
      * */
     if(channelList.category.includes("Music"))  {
-      console.log(channelList.items.length)
       musicData.items = musicData.items.concat(channelList.items)
     } else {
       let sortedData = bubbleSort(channelList)
+
+      /**
+       * Remove duplicated Channel
+       * */
+      sortedData.items = sortedData.items.filter((channel, index, self) =>
+        index === self.findIndex((c) => (
+          c.id === channel.id
+        ))
+      );
 
       if(sortedData.items.length > 100) {
         sortedData.items = sortedData.items.slice(0, 100);
@@ -131,6 +143,28 @@ exports.rankByCategory = (req, res) => {
           console.log(`completed ${sortedData.category}.json file!`);
         });
     }
+  }
+
+
+  /**
+   * Sort Music Data
+   * */
+  let sortedMusicData = bubbleSort(musicData)
+
+  /**
+   * Remove duplicated Channel
+   * */
+  sortedMusicData.items = sortedMusicData.items.filter((channel, index, self) =>
+    index === self.findIndex((c) => (
+      c.id === channel.id
+    ))
+  );
+
+  /**
+   * Reduce to length 100
+   * */
+  if(sortedMusicData.items.length > 100) {
+    sortedMusicData.items = sortedMusicData.items.slice(0, 100);
   }
 
   fs.writeFile(`${writtenFileDestination}/${musicData.category}.json`,
